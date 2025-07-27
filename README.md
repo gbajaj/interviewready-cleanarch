@@ -4,6 +4,9 @@ A modern Android application built with MVVM Clean Architecture, Kotlin, and Jet
 
 ## 🏗️ Architecture
 
+<img width="1699" height="621" alt="Clean" src="https://github.com/user-attachments/assets/26186775-8235-4a34-9866-7f2a60fce546" />
+
+
 This project follows the **MVVM Clean Architecture** pattern, organized into three main layers:
 
 ### Presentation Layer
