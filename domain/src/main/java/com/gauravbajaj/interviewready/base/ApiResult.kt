@@ -1,4 +1,4 @@
-package com.gauravbajaj.interviewready.data.base
+package com.gauravbajaj.interviewready.base
 
 /**
  * A sealed class that represents the result of an API operation.

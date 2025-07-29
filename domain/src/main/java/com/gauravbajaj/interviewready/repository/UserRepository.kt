@@ -1,5 +1,6 @@
 package com.gauravbajaj.interviewready.repository
 
+import com.gauravbajaj.interviewready.base.ApiResult
 import com.gauravbajaj.interviewready.model.User
 import kotlinx.coroutines.flow.Flow
 
@@ -23,7 +24,7 @@ interface UserRepository {
      * @throws NetworkException when network connectivity issues occur
      * @throws DataParsingException when response data cannot be parsed
      */
-    fun getUsers(): Flow<List<User>>
+    fun getUsers(): Flow<ApiResult<List<User>>>
 
     /**
      * Retrieves a specific user by their ID.
@@ -35,7 +36,7 @@ interface UserRepository {
      * @throws DataParsingException when response data cannot be parsed
      * @throws UserNotFoundException when the user with given ID doesn't exist
      */
-    fun getUser(userId: String): Flow<User>
+    fun getUser(userId: String): Flow<ApiResult<User>>
 }
 
 /**

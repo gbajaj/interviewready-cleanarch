@@ -13,6 +13,7 @@ import com.gauravbajaj.interviewready.base.UIState
  * A composable function that displays different UI based on the [UIState].
  *
  * This function handles the common UI states: Initial, Loading, Success, and Error.
+ * It provides enhanced error handling with retry capabilities and user-friendly messages.
  *
  * @param T The type of data associated with the [UIState].
  * @param uiState The current state of the UI.
@@ -34,7 +35,7 @@ fun <T> ScreenContent(
         when (uiState) {
             UIState.Initial -> {
                 Text(
-                    text = "No content yet",
+                    text = "Ready to load content",
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.align(Alignment.Center)
                 )
@@ -51,7 +52,8 @@ fun <T> ScreenContent(
             is UIState.Error -> {
                 ErrorMessage(
                     message = uiState.message,
-                    onRetry = onRetry
+                    onRetry = if (uiState.canRetry) onRetry else null,
+                    modifier = Modifier.align(Alignment.Center)
                 )
             }
         }

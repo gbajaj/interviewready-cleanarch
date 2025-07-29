@@ -18,10 +18,9 @@ import com.gauravbajaj.interviewready.model.User
 /**
  * Composable function for the Home Screen.
  *
- * This screen displays a list of users fetched from a ViewModel.
- * It handles different UI states (Initial, Loading, Success, Error)
- * and allows retrying the data loading on error.
- * Users can click on an item in the list, triggering the [onItemClick] callback.
+ * This screen displays a list of users fetched from a ViewModel using the new
+ * ApiResult-based error handling system. It handles different UI states
+ * (Initial, Loading, Success, Error) with enhanced error messages and retry logic.
  *
  * @param navController The NavController used for navigation.
  * @param modifier The Modifier to be applied to the root Composable of this screen.
@@ -36,13 +35,15 @@ fun HomeScreen(
     onItemClick: (User) -> Unit = {}
 ) {
     val viewModel = hiltViewModel<HomeViewModel>()
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    LaunchedEffect(uiState) {
+
+    // Load users when the screen is first displayed
+    LaunchedEffect(Unit) {
         if (uiState is UIState.Initial) {
             viewModel.loadUsers()
         }
     }
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -56,30 +57,101 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            onRetry = {
-                viewModel.loadUsers()
-            }
+            onRetry = { viewModel.retry() }
         ) {
-
+            // Success state content
             val successState = uiState as UIState.Success
+            val users = successState.data
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp)
-            ) {
-                val data = successState.data
-                items(data.size) { index ->
-                    val user = data[index]
-                    Text(
-                        text = user.name,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onItemClick(user) }
-                            .padding(vertical = 8.dp)
-                    )
-                }
+            if (users.isEmpty()) {
+                // Handle empty state with a nice message
+                EmptyUsersContent()
+            } else {
+                UsersList(
+                    users = users,
+                    onItemClick = onItemClick
+                )
             }
         }
+    }
+}
+
+/**
+ * Displays the list of users
+ */
+@Composable
+private fun UsersList(
+    users: List<User>,
+    onItemClick: (User) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(users.size) { index ->
+            val user = users[index]
+            UserItem(
+                user = user,
+                onClick = { onItemClick(user) }
+            )
+        }
+    }
+}
+
+/**
+ * Individual user item
+ */
+@Composable
+private fun UserItem(
+    user: User,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = user.name,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = user.email,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/**
+ * Empty state when no users are available
+ */
+@Composable
+private fun EmptyUsersContent() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "No users found",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "There are currently no users to display",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
