@@ -63,8 +63,8 @@ class UserRepositoryImpl @Inject constructor(
 
             safeApiCall {
                 // For now, using fake data. Will switch to real API later
-                // userApi.getUsers()
-                getFakeUsers()
+                 userApi.getUsers()
+//                getFakeUsers()
             }
         }
 
@@ -131,6 +131,11 @@ class UserRepositoryImpl @Inject constructor(
                 exception
             )
 
+            is JsonEncodingException -> ApiResult.ParseError(
+                "Failed to parse server response",
+                exception
+            )
+
             is IOException -> ApiResult.NetworkError(
                 "Network error occurred",
                 exception
@@ -146,11 +151,6 @@ class UserRepositoryImpl @Inject constructor(
             // JSON parsing errors
             is JsonDataException -> ApiResult.ParseError(
                 "Invalid data format received",
-                exception
-            )
-
-            is JsonEncodingException -> ApiResult.ParseError(
-                "Failed to parse server response",
                 exception
             )
 

@@ -78,4 +78,15 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // For testing, need access to FakeUserApi
+    testImplementation(project(":data")) // Alternatively, we can create a common test utils module for fakes
+
+    // Testing
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.moshi) // JSON library for Android and Java
+    testImplementation(libs.moshiKotlin) // Kotlin support for Moshi
+
 }

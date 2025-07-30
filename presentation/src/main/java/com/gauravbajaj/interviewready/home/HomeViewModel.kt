@@ -138,12 +138,12 @@ class HomeViewModel @Inject constructor(
      */
     private fun getUserFriendlyNetworkMessage(error: ApiResult.NetworkError): String {
         return when {
+            error.message.contains("timed out", ignoreCase = true) -> {
+                "The request is taking too long. Please try again"
+            }
             error.message.contains("internet", ignoreCase = true) ||
                     error.message.contains("connection", ignoreCase = true) -> {
                 "Please check your internet connection and try again"
-            }
-            error.message.contains("timeout", ignoreCase = true) -> {
-                "The request is taking too long. Please try again"
             }
             else -> {
                 "Network error occurred. Please try again"
