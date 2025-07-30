@@ -3,6 +3,7 @@ package com.gauravbajaj.interviewready.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gauravbajaj.interviewready.base.ApiResult
+import com.gauravbajaj.interviewready.base.RetryConfig
 import com.gauravbajaj.interviewready.base.UIState
 import com.gauravbajaj.interviewready.model.User
 import com.gauravbajaj.interviewready.usecase.GetUsersUserCase
@@ -23,16 +24,20 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val getUsersUserCase: GetUsersUserCase
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<UIState<List<User>>>(UIState.Initial)
     val uiState: StateFlow<UIState<List<User>>> = _uiState
 
+    private val _retryState = MutableStateFlow<RetryInfo?>(null)
+    val retryState: StateFlow<RetryInfo?> = _retryState
+
     /**
      * Loads users from the use case and updates the UI state accordingly.
+     * Implements automatic retry with exponential backoff for appropriate errors.
      */
     fun loadUsers() {
         viewModelScope.launch {
             _uiState.value = UIState.Loading
+            _retryState.value = null
 
             getUsersUserCase.invoke()
                 .catch { throwable ->
@@ -42,9 +47,40 @@ class HomeViewModel @Inject constructor(
                         throwable = throwable,
                         canRetry = true
                     )
+                    _retryState.value = null
                 }
                 .collect { apiResult ->
                     _uiState.value = mapApiResultToUIState(apiResult)
+                    _retryState.value = null
+                }
+        }
+    }
+
+    /**
+     * Loads users with custom retry configuration.
+     * Useful for different retry strategies based on user action or context.
+     */
+    fun loadUsersWithRetry(retryConfig: RetryConfig = RetryConfig.DEFAULT) {
+        viewModelScope.launch {
+            _uiState.value = UIState.Loading
+            _retryState.value = RetryInfo(
+                currentAttempt = 0,
+                maxAttempts = retryConfig.maxAttempts,
+                isRetrying = false
+            )
+
+            getUsersUserCase.invoke()
+                .catch { throwable ->
+                    _uiState.value = UIState.Error(
+                        message = "An unexpected error occurred",
+                        throwable = throwable,
+                        canRetry = true
+                    )
+                    _retryState.value = null
+                }
+                .collect { apiResult ->
+                    _uiState.value = mapApiResultToUIState(apiResult)
+                    _retryState.value = null
                 }
         }
     }
@@ -135,4 +171,19 @@ class HomeViewModel @Inject constructor(
     fun retry() {
         loadUsers()
     }
+}
+
+/**
+ * Data class to represent retry information for UI display
+ */
+data class RetryInfo(
+    val currentAttempt: Int,
+    val maxAttempts: Int,
+    val isRetrying: Boolean
+) {
+    val progress: Float
+        get() = if (maxAttempts == 0) 0f else currentAttempt.toFloat() / maxAttempts.toFloat()
+
+    val hasMoreAttempts: Boolean
+        get() = currentAttempt < maxAttempts
 }

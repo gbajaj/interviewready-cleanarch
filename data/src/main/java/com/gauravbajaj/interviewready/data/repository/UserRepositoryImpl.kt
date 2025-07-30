@@ -3,6 +3,9 @@ package com.gauravbajaj.interviewready.data.repository
 import android.content.Context
 import com.gauravbajaj.interviewready.data.api.UserApi
 import com.gauravbajaj.interviewready.base.ApiResult
+import com.gauravbajaj.interviewready.base.RetryConfig
+import com.gauravbajaj.interviewready.base.getErrorMessage
+import com.gauravbajaj.interviewready.base.retryWithBackoff
 import com.gauravbajaj.interviewready.data.network.NetworkConnectivityChecker
 import com.gauravbajaj.interviewready.model.User
 import com.gauravbajaj.interviewready.repository.UserRepository
@@ -38,55 +41,66 @@ class UserRepositoryImpl @Inject constructor(
     private val moshi: Moshi,
     private val networkChecker: NetworkConnectivityChecker
 ) : UserRepository {
+
     override fun getUsers(): Flow<ApiResult<List<User>>> = flow {
-        // Check network connectivity first
-        if (!networkChecker.isConnected()) {
-            emit(
-                ApiResult.NetworkError(
+        val result = retryWithBackoff(
+            config = RetryConfig.DEFAULT,
+            onRetry = { attempt, error ->
+                // Log retry attempts (in a real app, you'd use proper logging)
+                println("Retrying getUsers() - Attempt $attempt, Error: ${error.getErrorMessage()}")
+            }
+        ) {
+            // Check network connectivity first
+            if (!networkChecker.isConnected()) {
+                return@retryWithBackoff ApiResult.NetworkError(
                     message = "No internet connection. ${networkChecker.getConnectionStatusDescription()}",
                     cause = null
                 )
-            )
-            return@flow
-        }
-        // Simulate network delay for better UX testing
-        delay(1000)
+            }
 
-        val apiResult = safeApiCall {
-            // For now, using fake data. Will switch to real API later
-            // userApi.getUsers()
-            getFakeUsers()
+            // Simulate network delay for better UX testing
+            delay(1000)
+
+            safeApiCall {
+                // For now, using fake data. Will switch to real API later
+                // userApi.getUsers()
+                getFakeUsers()
+            }
         }
 
-        emit(apiResult)
+        emit(result)
     }
 
     override fun getUser(userId: String): Flow<ApiResult<User>> = flow {
-        // Check network connectivity first
-        if (!networkChecker.isConnected()) {
-            emit(
-                ApiResult.NetworkError(
+        val result = retryWithBackoff(
+            config = RetryConfig.DEFAULT,
+            onRetry = { attempt, error ->
+                println("Retrying getUser($userId) - Attempt $attempt, Error: ${error.getErrorMessage()}")
+            }
+        ) {
+            // Check network connectivity first
+            if (!networkChecker.isConnected()) {
+                return@retryWithBackoff ApiResult.NetworkError(
                     message = "No internet connection. ${networkChecker.getConnectionStatusDescription()}",
                     cause = null
                 )
-            )
-            return@flow
-        }
-        val apiResult = safeApiCall {
-            userApi.getUser(userId)
+            }
+
+            val apiResult = safeApiCall {
+                userApi.getUser(userId)
+            }
+
+            // Transform empty data error to more specific error for single user
+            when (apiResult) {
+                is ApiResult.EmptyDataError -> ApiResult.HttpError(
+                    code = 404,
+                    message = "User with ID '$userId' not found"
+                )
+                else -> apiResult
+            }
         }
 
-        // Transform empty data error to more specific error for single user
-        val finalResult = when (apiResult) {
-            is ApiResult.EmptyDataError -> ApiResult.HttpError(
-                code = 404,
-                message = "User with ID '$userId' not found"
-            )
-
-            else -> apiResult
-        }
-
-        emit(finalResult)
+        emit(result)
     }
 
     /**
