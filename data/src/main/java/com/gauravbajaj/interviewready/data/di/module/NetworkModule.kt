@@ -1,12 +1,15 @@
 package com.gauravbajaj.interviewready.data.di.module
 
+import android.content.Context
 import com.gauravbajaj.interviewready.data.api.UserApi
 import com.gauravbajaj.interviewready.data.di.BaseUrl
+import com.gauravbajaj.interviewready.data.network.NetworkConnectivityChecker
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -63,5 +66,12 @@ object NetworkModule {
     @Singleton
     fun provideUserApi(retrofit: Retrofit): UserApi =
         retrofit.create(UserApi::class.java)
+
+
+    @Provides
+    @Singleton
+    fun provideNetworkConnectivityChecker(
+        @ApplicationContext context: Context
+    ): NetworkConnectivityChecker = NetworkConnectivityChecker(context)
 
 }

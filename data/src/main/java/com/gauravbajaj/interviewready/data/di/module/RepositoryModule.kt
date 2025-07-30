@@ -2,6 +2,7 @@ package com.gauravbajaj.interviewready.data.di.module
 
 import android.content.Context
 import com.gauravbajaj.interviewready.data.api.UserApi
+import com.gauravbajaj.interviewready.data.network.NetworkConnectivityChecker
 import com.gauravbajaj.interviewready.data.repository.UserRepositoryImpl
 import com.gauravbajaj.interviewready.repository.UserRepository
 import com.squareup.moshi.Moshi
@@ -26,7 +27,8 @@ object RepositoryModule {
     fun provideUserRepository(
         userApi: UserApi,
         @ApplicationContext context: Context,
-        moshi: Moshi
+        moshi: Moshi,
+        networkChecker: NetworkConnectivityChecker
     ): UserRepository =
-        UserRepositoryImpl(userApi, context, moshi)
+        UserRepositoryImpl(userApi, context, moshi, networkChecker)
 }

@@ -3,6 +3,7 @@ package com.gauravbajaj.interviewready.data.repository
 import android.content.Context
 import com.gauravbajaj.interviewready.data.api.UserApi
 import com.gauravbajaj.interviewready.base.ApiResult
+import com.gauravbajaj.interviewready.data.network.NetworkConnectivityChecker
 import com.gauravbajaj.interviewready.model.User
 import com.gauravbajaj.interviewready.repository.UserRepository
 import com.squareup.moshi.JsonDataException
@@ -34,10 +35,20 @@ class UserRepositoryImpl @Inject constructor(
     private val userApi: UserApi,
     @ApplicationContext
     private val context: Context,
-    private val moshi: Moshi
+    private val moshi: Moshi,
+    private val networkChecker: NetworkConnectivityChecker
 ) : UserRepository {
-
     override fun getUsers(): Flow<ApiResult<List<User>>> = flow {
+        // Check network connectivity first
+        if (!networkChecker.isConnected()) {
+            emit(
+                ApiResult.NetworkError(
+                    message = "No internet connection. ${networkChecker.getConnectionStatusDescription()}",
+                    cause = null
+                )
+            )
+            return@flow
+        }
         // Simulate network delay for better UX testing
         delay(1000)
 
@@ -51,6 +62,16 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override fun getUser(userId: String): Flow<ApiResult<User>> = flow {
+        // Check network connectivity first
+        if (!networkChecker.isConnected()) {
+            emit(
+                ApiResult.NetworkError(
+                    message = "No internet connection. ${networkChecker.getConnectionStatusDescription()}",
+                    cause = null
+                )
+            )
+            return@flow
+        }
         val apiResult = safeApiCall {
             userApi.getUser(userId)
         }
@@ -61,6 +82,7 @@ class UserRepositoryImpl @Inject constructor(
                 code = 404,
                 message = "User with ID '$userId' not found"
             )
+
             else -> apiResult
         }
 
@@ -89,10 +111,12 @@ class UserRepositoryImpl @Inject constructor(
                 "No internet connection available",
                 exception
             )
+
             is SocketTimeoutException -> ApiResult.NetworkError(
                 "Connection timed out",
                 exception
             )
+
             is IOException -> ApiResult.NetworkError(
                 "Network error occurred",
                 exception
@@ -110,6 +134,7 @@ class UserRepositoryImpl @Inject constructor(
                 "Invalid data format received",
                 exception
             )
+
             is JsonEncodingException -> ApiResult.ParseError(
                 "Failed to parse server response",
                 exception
