@@ -149,3 +149,63 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Gaurav Bajaj - [@gbajaj](https://github.com/gbajaj)
 
 Project Link: [https://github.com/gbajaj/interviewready-cleanarch.git](https://github.com/gbajaj/interviewready-cleanarch)
+
+
+-------
+# Project Followup Questions
+
+## **Architecture & Design Decisions**
+
+**Q1: Why did you choose to place `ApiResult` in the domain layer instead of the data layer? Walk me through that decision and the trade-offs.**
+
+**Q2: I see you're using `Flow<ApiResult<T>>` instead of just `Flow<T>` with exceptions. Explain the pros and cons of this approach. When might you use exceptions instead?**
+
+**Q3: Your `UIState` has a single `Error` type with throwable composition rather than multiple error types like `NetworkError`, `DataError`. Defend this design choice. What are the implications?**
+
+## **Error Handling & Resilience**
+
+**Q4: Looking at your retry logic, you have `retryableHttpCodes: Set<Int> = setOf(500, 502, 503, 504)`. Why specifically these codes? Should 429 (Rate Limit) be included? What about 408 (Request Timeout)?**
+
+**Q5: Your exponential backoff starts at 1 second with a 2.0 multiplier. How did you arrive at these values? In a production app serving millions of users, what would you consider?**
+
+**Q6: I notice you check network connectivity before each API call. What happens if the network disconnects after the check but before the HTTP request? How would you handle that race condition?**
+
+## **Testing Strategy**
+
+**Q7: You chose to create a `FakeUserApi` instead of mocking with Mockito/MockK. Explain this decision. What are the trade-offs? When would you use mocks instead?**
+
+**Q8: Your `FakeUserApi` is in `testFixtures`. Why not just put it in the main source set for simplicity? What problems could that cause?**
+
+**Q9: How would you test the retry logic specifically? Show me how you'd verify that exponential backoff is working correctly.**
+
+## **Android-Specific Concerns**
+
+**Q10: Your `NetworkConnectivityChecker` uses `ConnectivityManager`. What happens when the app is backgrounded? Should you unregister network callbacks? How would you handle this in a real app?**
+
+**Q11: Looking at your ViewModel, you're using `viewModelScope`. What happens to ongoing network requests when the ViewModel is cleared? Is this the behavior you want?**
+
+**Q12: Your repository has a 1-second delay (`delay(1000)`) for "better UX testing". In production, would you keep this? How would you handle actual loading states?**
+
+## **Performance & Memory**
+
+**Q13: Your `RetryConfig.calculateDelay()` uses `Math.pow()`. For a high-frequency API with many concurrent requests, could this become a performance bottleneck? How would you optimize it?**
+
+**Q14: Looking at error handling, you're creating new `ApiResult` instances for each error. In a chat app making hundreds of API calls per minute, how would you optimize memory usage?**
+
+**Q15: Your `FakeUserApi` stores test data as instance variables. If this were used in parallel test execution, what problems might occur?**
+
+## **Production Readiness**
+
+**Q16: I don't see any logging in your retry logic. How would you monitor retry behavior in production? What metrics would you track?**
+
+**Q17: Your network error messages are hardcoded in English. How would you handle localization? What about accessibility?**
+
+**Q18: Looking at your DI setup, all your network components are Singletons. Is this always appropriate? When might you want different scopes?**
+
+## **Code Review Questions**
+
+**Q19: In `mapExceptionToApiResult()`, you have a catch-all `else -> UnknownError`. In production, what percentage of errors would you expect to hit this case? How would you monitor it?**
+
+**Q20: Your ViewModel converts `ApiResult` to user-friendly messages. Should this logic be in the ViewModel or would you put it elsewhere? Why?**
+
+---
