@@ -1,4 +1,6 @@
-package com.gauravbajaj.interviewready.base
+package com.gauravbajaj.interviewready.base.retry
+
+import com.gauravbajaj.interviewready.base.ApiResult
 
 /**
  * Configuration class for retry logic with exponential backoff.

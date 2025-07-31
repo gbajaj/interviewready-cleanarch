@@ -1,10 +1,9 @@
-package com.gauravbajaj.interviewready.base
+package com.gauravbajaj.interviewready.base.retry
 
+import com.gauravbajaj.interviewready.base.ApiResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.retryWhen
 
 /**
  * Extension functions for implementing retry logic with exponential backoff

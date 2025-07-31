@@ -2,10 +2,10 @@ package com.gauravbajaj.interviewready.data.repository
 
 import com.gauravbajaj.interviewready.data.api.UserApi
 import com.gauravbajaj.interviewready.base.ApiResult
-import com.gauravbajaj.interviewready.base.RetryConfig
-import com.gauravbajaj.interviewready.base.flowWithRetry
+import com.gauravbajaj.interviewready.base.retry.RetryConfig
+import com.gauravbajaj.interviewready.base.retry.flowWithRetry
 import com.gauravbajaj.interviewready.base.getErrorMessage
-import com.gauravbajaj.interviewready.base.retryWithBackoff
+import com.gauravbajaj.interviewready.base.retry.retryWithBackoff
 import com.gauravbajaj.interviewready.data.di.DemoUserApiType
 import com.gauravbajaj.interviewready.data.network.NetworkConnectivityChecker
 import com.gauravbajaj.interviewready.model.User

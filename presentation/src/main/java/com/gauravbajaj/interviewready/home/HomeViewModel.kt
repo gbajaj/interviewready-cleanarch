@@ -3,7 +3,7 @@ package com.gauravbajaj.interviewready.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gauravbajaj.interviewready.base.ApiResult
-import com.gauravbajaj.interviewready.base.RetryConfig
+import com.gauravbajaj.interviewready.base.retry.RetryConfig
 import com.gauravbajaj.interviewready.base.UIState
 import com.gauravbajaj.interviewready.model.User
 import com.gauravbajaj.interviewready.usecase.GetUsersUserCase
