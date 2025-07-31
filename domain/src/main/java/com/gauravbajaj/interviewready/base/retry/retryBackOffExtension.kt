@@ -65,20 +65,3 @@ fun <T> flowWithRetry(
     val result = retryWithBackoff(config, onRetry, operation)
     emit(result)
 }
-
-/**
- * Data class to track retry state and statistics
- */
-data class RetryState(
-    val currentAttempt: Int = 0,
-    val totalAttempts: Int = 0,
-    val lastError: ApiResult<*>? = null,
-    val nextRetryDelay: Long = 0L,
-    val isRetrying: Boolean = false
-) {
-    val hasMoreAttempts: Boolean
-        get() = currentAttempt < totalAttempts
-
-    val progress: Float
-        get() = if (totalAttempts == 0) 0f else currentAttempt.toFloat() / totalAttempts.toFloat()
-}
