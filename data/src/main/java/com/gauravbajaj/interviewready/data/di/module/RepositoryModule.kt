@@ -2,10 +2,10 @@ package com.gauravbajaj.interviewready.data.di.module
 
 import android.content.Context
 import com.gauravbajaj.interviewready.data.api.UserApi
+import com.gauravbajaj.interviewready.data.di.DemoUserApiType
 import com.gauravbajaj.interviewready.data.network.NetworkConnectivityChecker
 import com.gauravbajaj.interviewready.data.repository.UserRepositoryImpl
 import com.gauravbajaj.interviewready.repository.UserRepository
-import com.squareup.moshi.Moshi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,10 +25,9 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideUserRepository(
-        userApi: UserApi,
+        @DemoUserApiType userApi: UserApi,
         @ApplicationContext context: Context,
-        moshi: Moshi,
         networkChecker: NetworkConnectivityChecker
     ): UserRepository =
-        UserRepositoryImpl(userApi, context, moshi, networkChecker)
+        UserRepositoryImpl(userApi, context, networkChecker)
 }

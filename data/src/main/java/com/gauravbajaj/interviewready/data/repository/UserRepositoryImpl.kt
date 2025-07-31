@@ -6,12 +6,12 @@ import com.gauravbajaj.interviewready.base.ApiResult
 import com.gauravbajaj.interviewready.base.RetryConfig
 import com.gauravbajaj.interviewready.base.getErrorMessage
 import com.gauravbajaj.interviewready.base.retryWithBackoff
+import com.gauravbajaj.interviewready.data.di.DemoUserApiType
 import com.gauravbajaj.interviewready.data.network.NetworkConnectivityChecker
 import com.gauravbajaj.interviewready.model.User
 import com.gauravbajaj.interviewready.repository.UserRepository
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonEncodingException
-import com.squareup.moshi.Moshi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -24,21 +24,21 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Repository implementation for fetching user data.
+ * Implementation of [UserRepository] that provides a real data source for users.
  *
- * This class handles all the complexity of network operations and error handling,
- * returning ApiResult types that provide rich error information to the domain layer.
+ * This implementation makes real network calls to the API to fetch user data.
+ * It also implements retry logic with exponential backoff in case of network errors.
  *
- * @property userApi The API service for user-related network calls.
- * @property context The application context, used to access resources.
- * @property moshi The Moshi instance for JSON serialization and deserialization.
+ * @param userApi the API interface to make network calls to fetch users
+ * @param context the Android context to get the application context
+ * @param moshi the Moshi instance to parse JSON responses
+ * @param networkChecker the network connectivity checker to check internet connectivity
  */
 @Singleton
 class UserRepositoryImpl @Inject constructor(
-    private val userApi: UserApi,
+    @DemoUserApiType private val userApi: UserApi,
     @ApplicationContext
     private val context: Context,
-    private val moshi: Moshi,
     private val networkChecker: NetworkConnectivityChecker
 ) : UserRepository {
 
@@ -64,7 +64,6 @@ class UserRepositoryImpl @Inject constructor(
             safeApiCall {
                 // For now, using fake data. Will switch to real API later
                  userApi.getUsers()
-//                getFakeUsers()
             }
         }
 
@@ -159,24 +158,6 @@ class UserRepositoryImpl @Inject constructor(
                 "An unexpected error occurred: ${exception.message}",
                 exception
             )
-        }
-    }
-
-    /**
-     * Loads fake user data from assets for development/testing
-     */
-    private fun getFakeUsers(): List<User> {
-        return try {
-            val jsonString = context.assets.open("users.json")
-                .bufferedReader()
-                .use { it.readText() }
-
-            val users = moshi.adapter(Array<User>::class.java)
-                .fromJson(jsonString)?.toList() ?: emptyList()
-
-            return users
-        } catch (e: Exception) {
-            throw e // Will be caught and converted to ApiResult.ParseError
         }
     }
 }

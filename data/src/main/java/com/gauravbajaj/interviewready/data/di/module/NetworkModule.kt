@@ -3,6 +3,8 @@ package com.gauravbajaj.interviewready.data.di.module
 import android.content.Context
 import com.gauravbajaj.interviewready.data.api.UserApi
 import com.gauravbajaj.interviewready.data.di.BaseUrl
+import com.gauravbajaj.interviewready.data.di.DemoUserApiType
+import com.gauravbajaj.interviewready.data.local.LocalUserApi
 import com.gauravbajaj.interviewready.data.network.NetworkConnectivityChecker
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -73,5 +75,14 @@ object NetworkModule {
     fun provideNetworkConnectivityChecker(
         @ApplicationContext context: Context
     ): NetworkConnectivityChecker = NetworkConnectivityChecker(context)
+
+    @DemoUserApiType
+    @Provides
+    @Singleton
+    fun provideLocalUserApi(
+        moshi: Moshi,
+        @ApplicationContext context: Context
+    ): UserApi = LocalUserApi(moshi, context)
+
 
 }
