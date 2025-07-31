@@ -63,53 +63,22 @@ suspend fun <T> retryWithBackoff(
     operation: suspend () -> ApiResult<T>
 ): ApiResult<T> {
     var lastResult: ApiResult<T> = ApiResult.UnknownError("No attempts made")
-
-    for (attempt in 1..config.maxAttempts + 1) { // +1 for initial attempt
-        try {
-            lastResult = operation()
-
-            // If successful, return immediately
-            if (lastResult is ApiResult.Success) {
-                return lastResult
-            }
-
-            // If this is the last attempt, return the result (don't retry)
-            if (attempt > config.maxAttempts) {
-                return lastResult
-            }
-
-            // Check if we should retry this error type
-            if (!config.shouldRetry(lastResult)) {
-                return lastResult
-            }
-
-            // Calculate delay and notify about retry
-            val delayMs = config.calculateDelay(attempt)
-            onRetry?.invoke(attempt, lastResult)
-
-            // Wait before retrying
-            if (delayMs > 0) {
-                delay(delayMs)
-            }
-
+    for (attempt in 1..config.maxAttempts + 1) {
+        lastResult = try {
+            operation()
         } catch (exception: Exception) {
-            // Convert exception to ApiResult and handle similarly
-            lastResult = ApiResult.UnknownError(
-                "Unexpected error during retry attempt $attempt",
-                exception
-            )
-
-            if (attempt > config.maxAttempts || !config.shouldRetry(lastResult)) {
-                return lastResult
-            }
-
-            val delayMs = config.calculateDelay(attempt)
-            onRetry?.invoke(attempt, lastResult)
-
-            if (delayMs > 0) {
-                delay(delayMs)
-            }
+            ApiResult.UnknownError("Unexpected error during retry attempt $attempt", exception)
         }
+        // If success or shouldn't retry, return immediately
+        if (lastResult is ApiResult.Success
+            || attempt > config.maxAttempts
+            || !config.shouldRetry(lastResult)) {
+            return lastResult
+        }
+        // Notify retry and delay if configured
+        val delayMs = config.calculateDelay(attempt)
+        onRetry?.invoke(attempt, lastResult)
+        if (delayMs > 0) delay(delayMs)
     }
 
     return lastResult
