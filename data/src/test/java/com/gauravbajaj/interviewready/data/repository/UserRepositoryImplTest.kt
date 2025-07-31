@@ -31,29 +31,12 @@ class UserRepositoryImplTest {
 
     private lateinit var repository: UserRepositoryImpl
     private lateinit var fakeUserApi: FakeUserApi
-    private lateinit var mockContext: Context
     private lateinit var mockNetworkChecker: NetworkConnectivityChecker
-    private lateinit var moshi: Moshi
 
     @Before
     fun setup() {
         fakeUserApi = FakeUserApi()
-        mockContext = mockk()
         mockNetworkChecker = mockk()
-        moshi = Moshi.Builder()
-            .add(KotlinJsonAdapterFactory())
-            .build()
-
-        // Mock context assets for fake data (used as fallback)
-        val testJson = """
-            [
-                {"id": "1", "name": "John Doe", "email": "john@example.com"},
-                {"id": "2", "name": "Jane Smith", "email": "jane@example.com"}
-            ]
-        """.trimIndent()
-
-        val inputStream = ByteArrayInputStream(testJson.toByteArray())
-        every { mockContext.assets.open("users.json") } returns inputStream
 
         // Default network checker to connected
         every { mockNetworkChecker.isConnected() } returns true
@@ -61,8 +44,6 @@ class UserRepositoryImplTest {
 
         repository = UserRepositoryImpl(
             userApi = fakeUserApi,
-            context = mockContext,
-            moshi = moshi,
             networkChecker = mockNetworkChecker
         )
     }

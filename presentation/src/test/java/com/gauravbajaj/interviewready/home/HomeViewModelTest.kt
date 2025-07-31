@@ -76,8 +76,6 @@ class HomeViewModelTest {
 
         repository = UserRepositoryImpl(
             userApi = fakeUserApi,
-            context = mockContext,
-            moshi = moshi,
             networkChecker = mockNetworkChecker
         )
 

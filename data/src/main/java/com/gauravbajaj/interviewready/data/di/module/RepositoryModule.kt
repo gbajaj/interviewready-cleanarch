@@ -26,8 +26,7 @@ object RepositoryModule {
     @Singleton
     fun provideUserRepository(
         @DemoUserApiType userApi: UserApi,
-        @ApplicationContext context: Context,
         networkChecker: NetworkConnectivityChecker
     ): UserRepository =
-        UserRepositoryImpl(userApi, context, networkChecker)
+        UserRepositoryImpl(userApi,networkChecker)
 }

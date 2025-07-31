@@ -5,6 +5,7 @@ import com.gauravbajaj.interviewready.data.api.UserApi
 import com.gauravbajaj.interviewready.model.User
 import com.squareup.moshi.Moshi
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 
 class LocalUserApi(val moshi: Moshi, @ApplicationContext val context: Context) : UserApi {
     /**
@@ -14,6 +15,8 @@ class LocalUserApi(val moshi: Moshi, @ApplicationContext val context: Context) :
      * Loads fake user data from assets for development/testing
      */
     override suspend fun getUsers(): List<User> {
+        // Simulate network delay for better UX testing
+        delay(1000)
         return try {
             val jsonString = context.assets.open("users.json")
                 .bufferedReader()

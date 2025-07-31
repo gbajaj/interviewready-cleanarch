@@ -12,42 +12,6 @@ import kotlinx.coroutines.flow.retryWhen
  */
 
 /**
- * Retries a Flow<ApiResult<T>> operation with exponential backoff.
- *
- * This function implements smart retry logic that:
- * - Only retries appropriate error types based on RetryConfig
- * - Uses exponential backoff with configurable delays
- * - Respects maximum attempt limits
- * - Provides attempt information for logging/monitoring
- *
- * @param config The retry configuration to use
- * @param onRetry Optional callback invoked before each retry attempt
- * @return A new Flow that implements retry logic
- */
-fun <T> Flow<ApiResult<T>>.retryWithBackoff(
-    config: RetryConfig = RetryConfig.DEFAULT,
-    onRetry: ((attempt: Int, error: ApiResult<*>) -> Unit)? = null
-): Flow<ApiResult<T>> {
-    if (config.maxAttempts <= 0) {
-        return this // No retry if maxAttempts is 0 or negative
-    }
-
-    return this.retryWhen { cause, attempt ->
-        // Note: retryWhen uses 0-based attempts, but we want 1-based for our logic
-        val attemptNumber = attempt.toInt() + 1
-
-        // If we've exceeded max attempts, don't retry
-        if (attemptNumber > config.maxAttempts) {
-            return@retryWhen false
-        }
-
-        // We need to get the last emitted value to check if it should be retried
-        // Since we're working with ApiResult, we'll implement this differently
-        true // For now, let the flow-based retry handle the logic
-    }
-}
-
-/**
  * Retries a suspend function that returns ApiResult<T> with exponential backoff.
  *
  * This is a more direct approach for retrying individual operations.

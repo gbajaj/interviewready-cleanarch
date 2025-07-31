@@ -1,9 +1,9 @@
 package com.gauravbajaj.interviewready.data.repository
 
-import android.content.Context
 import com.gauravbajaj.interviewready.data.api.UserApi
 import com.gauravbajaj.interviewready.base.ApiResult
 import com.gauravbajaj.interviewready.base.RetryConfig
+import com.gauravbajaj.interviewready.base.flowWithRetry
 import com.gauravbajaj.interviewready.base.getErrorMessage
 import com.gauravbajaj.interviewready.base.retryWithBackoff
 import com.gauravbajaj.interviewready.data.di.DemoUserApiType
@@ -12,8 +12,6 @@ import com.gauravbajaj.interviewready.model.User
 import com.gauravbajaj.interviewready.repository.UserRepository
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonEncodingException
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
@@ -37,38 +35,30 @@ import javax.inject.Singleton
 @Singleton
 class UserRepositoryImpl @Inject constructor(
     @DemoUserApiType private val userApi: UserApi,
-    @ApplicationContext
-    private val context: Context,
     private val networkChecker: NetworkConnectivityChecker
 ) : UserRepository {
 
-    override fun getUsers(): Flow<ApiResult<List<User>>> = flow {
-        val result = retryWithBackoff(
+    override fun getUsers(): Flow<ApiResult<List<User>>> =
+        flowWithRetry(
             config = RetryConfig.DEFAULT,
             onRetry = { attempt, error ->
                 // Log retry attempts (in a real app, you'd use proper logging)
                 println("Retrying getUsers() - Attempt $attempt, Error: ${error.getErrorMessage()}")
-            }
-        ) {
-            // Check network connectivity first
-            if (!networkChecker.isConnected()) {
-                return@retryWithBackoff ApiResult.NetworkError(
-                    message = "No internet connection. ${networkChecker.getConnectionStatusDescription()}",
-                    cause = null
-                )
-            }
+            }, operation = {
+                // Check network connectivity first
+                if (!networkChecker.isConnected()) {
+                    return@flowWithRetry ApiResult.NetworkError(
+                        message = "No internet connection. ${networkChecker.getConnectionStatusDescription()}",
+                        cause = null
+                    )
+                }
 
-            // Simulate network delay for better UX testing
-            delay(1000)
-
-            safeApiCall {
-                // For now, using fake data. Will switch to real API later
-                 userApi.getUsers()
+                safeApiCall {
+                    // For now, using fake data. Will switch to real API later
+                    userApi.getUsers()
+                }
             }
-        }
-
-        emit(result)
-    }
+        )
 
     override fun getUser(userId: String): Flow<ApiResult<User>> = flow {
         val result = retryWithBackoff(
@@ -95,6 +85,7 @@ class UserRepositoryImpl @Inject constructor(
                     code = 404,
                     message = "User with ID '$userId' not found"
                 )
+
                 else -> apiResult
             }
         }
