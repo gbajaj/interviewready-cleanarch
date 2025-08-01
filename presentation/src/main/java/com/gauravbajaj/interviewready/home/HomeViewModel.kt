@@ -7,6 +7,7 @@ import com.gauravbajaj.interviewready.base.retry.RetryConfig
 import com.gauravbajaj.interviewready.base.UIState
 import com.gauravbajaj.interviewready.model.User
 import com.gauravbajaj.interviewready.usecase.GetUsersUserCase
+import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +23,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val getUsersUserCase: GetUsersUserCase
+    private val getUsersUserCase: Lazy<GetUsersUserCase>
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<UIState<List<User>>>(UIState.Initial)
     val uiState: StateFlow<UIState<List<User>>> = _uiState
@@ -39,7 +40,7 @@ class HomeViewModel @Inject constructor(
             _uiState.value = UIState.Loading
             _retryState.value = null
 
-            getUsersUserCase.invoke()
+            getUsersUserCase.get().invoke()
                 .catch { throwable ->
                     // Handle any unexpected errors that escape the ApiResult system
                     _uiState.value = UIState.Error(
@@ -69,7 +70,7 @@ class HomeViewModel @Inject constructor(
                 isRetrying = false
             )
 
-            getUsersUserCase.invoke()
+            getUsersUserCase.get().invoke()
                 .catch { throwable ->
                     _uiState.value = UIState.Error(
                         message = "An unexpected error occurred",

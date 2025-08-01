@@ -7,6 +7,7 @@ import com.gauravbajaj.interviewready.model.User
 import com.gauravbajaj.interviewready.test.fakes.FakeUserApi
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import dagger.Lazy
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first
@@ -36,6 +37,7 @@ class UserRepositoryImplTest {
     @Before
     fun setup() {
         fakeUserApi = FakeUserApi()
+
         mockNetworkChecker = mockk()
 
         // Default network checker to connected
@@ -43,8 +45,8 @@ class UserRepositoryImplTest {
         every { mockNetworkChecker.getConnectionStatusDescription() } returns "Connected via WiFi"
 
         repository = UserRepositoryImpl(
-            userApi = fakeUserApi,
-            networkChecker = mockNetworkChecker
+            userApi = Lazy { fakeUserApi },
+            networkChecker = Lazy { mockNetworkChecker }
         )
     }
 

@@ -12,6 +12,7 @@ import com.gauravbajaj.interviewready.model.User
 import com.gauravbajaj.interviewready.repository.UserRepository
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonEncodingException
+import dagger.Lazy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
@@ -34,8 +35,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class UserRepositoryImpl @Inject constructor(
-    @DemoUserApiType private val userApi: UserApi,
-    private val networkChecker: NetworkConnectivityChecker
+    @DemoUserApiType private val userApi: Lazy<UserApi>,
+    private val networkChecker: Lazy<NetworkConnectivityChecker>
 ) : UserRepository {
 
     override fun getUsers(): Flow<ApiResult<List<User>>> =
@@ -46,16 +47,16 @@ class UserRepositoryImpl @Inject constructor(
                 println("Retrying getUsers() - Attempt $attempt, Error: ${error.getErrorMessage()}")
             }, operation = {
                 // Check network connectivity first
-                if (!networkChecker.isConnected()) {
+                if (!networkChecker.get().isConnected()) {
                     return@flowWithRetry ApiResult.NetworkError(
-                        message = "No internet connection. ${networkChecker.getConnectionStatusDescription()}",
+                        message = "No internet connection. ${networkChecker.get().getConnectionStatusDescription()}",
                         cause = null
                     )
                 }
 
                 safeApiCall {
                     // For now, using fake data. Will switch to real API later
-                    userApi.getUsers()
+                    userApi.get().getUsers()
                 }
             }
         )
@@ -68,15 +69,15 @@ class UserRepositoryImpl @Inject constructor(
             }
         ) {
             // Check network connectivity first
-            if (!networkChecker.isConnected()) {
+            if (!networkChecker.get().isConnected()) {
                 return@retryWithBackoff ApiResult.NetworkError(
-                    message = "No internet connection. ${networkChecker.getConnectionStatusDescription()}",
+                    message = "No internet connection. ${networkChecker.get().getConnectionStatusDescription()}",
                     cause = null
                 )
             }
 
             val apiResult = safeApiCall {
-                userApi.getUser(userId)
+                userApi.get().getUser(userId)
             }
 
             // Transform empty data error to more specific error for single user

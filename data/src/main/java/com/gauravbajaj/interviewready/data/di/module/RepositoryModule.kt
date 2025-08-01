@@ -1,15 +1,14 @@
 package com.gauravbajaj.interviewready.data.di.module
 
-import android.content.Context
 import com.gauravbajaj.interviewready.data.api.UserApi
 import com.gauravbajaj.interviewready.data.di.DemoUserApiType
 import com.gauravbajaj.interviewready.data.network.NetworkConnectivityChecker
 import com.gauravbajaj.interviewready.data.repository.UserRepositoryImpl
 import com.gauravbajaj.interviewready.repository.UserRepository
+import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -25,8 +24,8 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideUserRepository(
-        @DemoUserApiType userApi: UserApi,
-        networkChecker: NetworkConnectivityChecker
+        @DemoUserApiType userApi: Lazy<UserApi>,
+        networkChecker: Lazy<NetworkConnectivityChecker>
     ): UserRepository =
-        UserRepositoryImpl(userApi,networkChecker)
+        UserRepositoryImpl(userApi, networkChecker)
 }

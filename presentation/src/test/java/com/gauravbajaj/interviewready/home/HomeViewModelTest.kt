@@ -8,6 +8,7 @@ import com.gauravbajaj.interviewready.test.fakes.FakeUserApi
 import com.gauravbajaj.interviewready.usecase.GetUsersUserCase
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import dagger.Lazy
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -75,12 +76,12 @@ class HomeViewModelTest {
         every { mockNetworkChecker.getConnectionStatusDescription() } returns "Connected via WiFi"
 
         repository = UserRepositoryImpl(
-            userApi = fakeUserApi,
-            networkChecker = mockNetworkChecker
+            userApi = Lazy { fakeUserApi },
+            networkChecker = Lazy { mockNetworkChecker }
         )
 
         useCase = GetUsersUserCase(repository)
-        viewModel = HomeViewModel(useCase)
+        viewModel = HomeViewModel(Lazy { useCase })
     }
 
     @After
@@ -130,8 +131,10 @@ class HomeViewModelTest {
         val state = viewModel.uiState.value
         assertTrue("State should be Error", state is UIState.Error)
         val errorState = state as UIState.Error
-        assertTrue("Should have user-friendly message",
-            errorState.message.contains("Please check your internet connection"))
+        assertTrue(
+            "Should have user-friendly message",
+            errorState.message.contains("Please check your internet connection")
+        )
         assertTrue("Should be retryable", errorState.canRetry)
     }
 
@@ -149,8 +152,10 @@ class HomeViewModelTest {
         assertTrue("State should be Error", state is UIState.Error)
         val errorState = state as UIState.Error
         assertTrue("Should have timeout error", errorState.throwable is SocketTimeoutException)
-        assertTrue("Should have timeout message",
-            errorState.message.contains("The request is taking too long"))
+        assertTrue(
+            "Should have timeout message",
+            errorState.message.contains("The request is taking too long")
+        )
         assertTrue("Should be retryable", errorState.canRetry)
     }
 
@@ -167,8 +172,10 @@ class HomeViewModelTest {
         val state = viewModel.uiState.value
         assertTrue("State should be Error", state is UIState.Error)
         val errorState = state as UIState.Error
-        assertTrue("Should have server error message",
-            errorState.message.contains("Server error. Please try again later"))
+        assertTrue(
+            "Should have server error message",
+            errorState.message.contains("Server error. Please try again later")
+        )
         assertTrue("Should be retryable", errorState.canRetry)
     }
 
@@ -185,8 +192,10 @@ class HomeViewModelTest {
         val state = viewModel.uiState.value
         assertTrue("State should be Error", state is UIState.Error)
         val errorState = state as UIState.Error
-        assertTrue("Should have auth error message",
-            errorState.message.contains("Authentication required"))
+        assertTrue(
+            "Should have auth error message",
+            errorState.message.contains("Authentication required")
+        )
         assertTrue("Should not be retryable", !errorState.canRetry)
     }
 
@@ -203,8 +212,10 @@ class HomeViewModelTest {
         val state = viewModel.uiState.value
         assertTrue("State should be Error", state is UIState.Error)
         val errorState = state as UIState.Error
-        assertTrue("Should have parse error message",
-            errorState.message.contains("We're having trouble processing the data"))
+        assertTrue(
+            "Should have parse error message",
+            errorState.message.contains("We're having trouble processing the data")
+        )
         assertTrue("Should be retryable", errorState.canRetry)
     }
 
@@ -260,8 +271,10 @@ class HomeViewModelTest {
         val state = viewModel.uiState.value
         assertTrue("State should be Error", state is UIState.Error)
         val errorState = state as UIState.Error
-        assertTrue("Should mention internet connection",
-            errorState.message.contains("Please check your internet connection"))
+        assertTrue(
+            "Should mention internet connection",
+            errorState.message.contains("Please check your internet connection")
+        )
     }
 
     @Test
@@ -289,8 +302,10 @@ class HomeViewModelTest {
             val state = viewModel.uiState.value
             assertTrue("State should be Error for code $code", state is UIState.Error)
             val errorState = state as UIState.Error
-            assertTrue("Should have appropriate message for $code: ${errorState.message}",
-                errorState.message.contains(expectedMessage, ignoreCase = true))
+            assertTrue(
+                "Should have appropriate message for $code: ${errorState.message}",
+                errorState.message.contains(expectedMessage, ignoreCase = true)
+            )
         }
     }
 
